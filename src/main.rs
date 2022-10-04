@@ -2,6 +2,7 @@ use structopt::StructOpt;
 use std::error::Error;
 use serde_derive::{Deserialize, Serialize};
 use reqwest::Url;
+use std::env;
 
 #[derive(StructOpt)]
 struct CLI {
@@ -93,8 +94,15 @@ struct Forecast {
 impl Forecast {
 
   async fn get_forecast(city_name: &String) -> Result <Forecast, Box<dyn Error>> {
+      let api_key = env::var("weather_api");
 
-    let url = format!("https://api.openweathermap.org/data/2.5/weather?q={city_name}&appid=5339604efcba8fb8f620a40592a5b63d");
+      let key:String;
+      match api_key{
+          Ok(val) => key = val,
+          Err(e) => panic!("Error : Cannot read API KEY :{}",e),
+      }
+
+    let url = format!("https://api.openweathermap.org/data/2.5/weather?q={city_name}&appid={key}");
     let url = Url::parse(&url)?;
 
     let resp = reqwest::get(url)
@@ -123,7 +131,7 @@ async fn main() -> Result<(), Box<dyn Error>>{
 
                 None => println!("No weather description available"),
             }
-            
+
             match response.main.temp {
                 Some(val) => println!("Current Temperature is {} C ", to_celcius(val)),
                 None => println!("No data found for current temperature"),
